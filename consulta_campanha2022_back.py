@@ -13,7 +13,11 @@ def carga_candidatos():
     uf_eleicao = {}
     nome_urna = {}
     situacao = {}
-    dic_candidatos = (nome, cargo, numero, partido, uf_eleicao, nome_urna, situacao)
+    instrucao = {}
+    raca = {}
+    ocupacao = {}
+    reeleicao = {}
+    dic_candidatos = (nome, cargo, numero, partido, uf_eleicao, nome_urna, situacao, instrucao, raca, ocupacao, reeleicao)
     for n in range(arq.shape[0]):
         cod = arq.loc[n,"SQ_CANDIDATO"]
         nome.update({cod : arq.loc[n,"NM_CANDIDATO"]})
@@ -22,7 +26,11 @@ def carga_candidatos():
         partido.update({cod : arq.loc[n,"SG_PARTIDO"]})
         uf_eleicao.update({cod : arq.loc[n,"SG_UE"]})
         nome_urna.update({cod : arq.loc[n,"NM_URNA_CANDIDATO"]})
-        situacao.update({cod : arq.loc[n,"DS_SITUACAO_CANDIDATURA"]})
+        situacao.update({cod : arq.loc[n,"DS_SITUACAO_CANDIDATO_URNA"]})
+        instrucao.update({cod : arq.loc[n,"DS_GRAU_INSTRUCAO"]})
+        raca.update({cod : arq.loc[n,"DS_COR_RACA"]})
+        ocupacao.update({cod : arq.loc[n,"DS_OCUPACAO"]})
+        reeleicao.update({cod : arq.loc[n,"ST_REELEICAO"]})
     return dic_candidatos
 
 #Função que retorna os dados relacionados ao candidato pesquisado
@@ -43,14 +51,16 @@ def busca_candidatos():
     if [conj_pesq.issubset(conj) for conj in base_proc].count(True)==0:
         print("\nNenhum dado relacionado ao candidato pesquisado foi encontrado.")
     else:
-        list_pesq = [cod for cod in dic_cand[0].keys() if conj_pesq.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[6][cod] == 'APTO'] + \
-                    [cod for cod in dic_cand[0].keys() if conj_pesq.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[6][cod] == 'APTO']
+        list_pesq = [cod for cod in dic_cand[0].keys() if conj_pesq.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[6][cod] == 'DEFERIDO'] + \
+                    [cod for cod in dic_cand[0].keys() if conj_pesq.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[6][cod] == 'DEFERIDO']
         if len(list_pesq) == 0:
-            print("\nNenhum candidato apto com o nome pesquisado foi encontrado.")
+            print("\nNenhum candidato deferido com o nome pesquisado foi encontrado.")
         else:
             for ind, cod in enumerate(list(set(list_pesq))):
-                dados_pesq = "Candidato: " + dic_cand[0][cod] + ", cargo: " + dic_cand[1][cod] + \
-                             ", nº na urna: " + str(dic_cand[2][cod]) + ", partido: " + dic_cand[3][cod]
+                dados_pesq = "Candidato: " + dic_cand[0][cod] + " (" + dic_cand[5][cod] + ")" + ", cargo: " + dic_cand[1][cod] + \
+                             ", nº na urna: " + str(dic_cand[2][cod]) + ", partido: " + dic_cand[3][cod] + \
+                             ", instrução: " + dic_cand[7][cod] + ", raça: " + dic_cand[8][cod] + \
+                             ", ocupação: " + dic_cand[9][cod] + ", reeleição: " + dic_cand[10][cod]
                 print("\nOcorrência",ind+1,"-> ",dados_pesq)
     print("\n\nVerifique se seu candidato já teve as contas julgadas irregulares \
 pelo Tribunal de Contas da União em https://contasirregulares.tcu.gov.br/")        
@@ -58,6 +68,7 @@ pelo Tribunal de Contas da União em https://contasirregulares.tcu.gov.br/")
 #Função que carrega o arquivo de dados das coligações dos partidos nas eleições 2022
 def carga_coligacoes():
     arq = pd.read_csv("consulta_coligacao_2022_BRASIL.csv",sep=";",encoding='latin1')
+    arq["COD_CHAVE"] = arq["SQ_COLIGACAO"].astype(str) + arq["NR_PARTIDO"].astype(str) + arq["CD_CARGO"].astype(str)
     partido = {}
     sigla = {}
     numero = {}
@@ -68,7 +79,7 @@ def carga_coligacoes():
     situacao = {}
     dic_coligacoes = (partido, sigla, numero, tipo, composicao, cargo, uf_eleicao, situacao)
     for n in range(arq.shape[0]):
-        cod = arq.loc[n,"COD_CHAVE"] # SQ_COLIGACAO + NR_PARTIDO + CD_CARGO*
+        cod = arq.loc[n,"COD_CHAVE"] # COD_CHAVE = SQ_COLIGACAO + NR_PARTIDO + CD_CARGO*
         partido.update({cod : arq.loc[n,"NM_PARTIDO"]})
         sigla.update({cod : arq.loc[n,"SG_PARTIDO"]})
         numero.update({cod : arq.loc[n,"NR_PARTIDO"]})
@@ -76,7 +87,7 @@ def carga_coligacoes():
         composicao.update({cod : arq.loc[n,"DS_COMPOSICAO_COLIGACAO"]})
         cargo.update({cod : arq.loc[n,"DS_CARGO"]})
         uf_eleicao.update({cod : arq.loc[n,"SG_UE"]})
-        situacao.update({cod : arq.loc[n,"CD_SITUACAO_LEGENDA"]})
+        situacao.update({cod : arq.loc[n,"CD_SITUACAO_LEGENDA"]})    
     return dic_coligacoes
 
 #Função que retorna os dados relacionados ao partido pesquisado
@@ -125,12 +136,12 @@ def gera_colinha():
             confirma = input("\nSeu voto será computado como inválido. Motivo: Candidato não encontrado. Confirma (tecla ENTER) ou não (qualquer outra tecla)? ")
             list_voto[0] = "BRANCO/NULO"
         else:
-            list_dep_fed = [cod for cod in dic_cand[0].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf] + \
-                           [cod for cod in dic_cand[5].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf]
+            list_dep_fed = [cod for cod in dic_cand[0].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO'] + \
+                           [cod for cod in dic_cand[5].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO']
             if len(list(set(list_dep_fed))) > 1:
                 for ind, cod in enumerate(list(set(list_dep_fed))):        
                     dados_dep_fed = "Número: " + str(dic_cand[2][cod]) + ", nome completo: " + dic_cand[0][cod] + \
-                         ", partido: " + dic_cand[3][cod]
+                         ", partido: " + dic_cand[3][cod] + ", reeleição: " + dic_cand[10][cod]
                     print("\nCandidato",ind+1,"-> ",dados_dep_fed)                
                 confirma = input("\nSeu voto será computado como inválido. Motivo: Mais de um candidato listado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
                 list_voto[0] = "BRANCO/NULO"
@@ -149,12 +160,12 @@ def gera_colinha():
             confirma = input("\nSeu voto será computado como inválido. Motivo: Candidato não encontrado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
             list_voto[1] = "BRANCO/NULO"
         else:
-            list_dep_reg = [cod for cod in dic_cand[0].keys() if conj_dep_reg.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] in {'DEPUTADO ESTADUAL','DEPUTADO DISTRITAL'} and dic_cand[4][cod] == uf] + \
-                           [cod for cod in dic_cand[0].keys() if conj_dep_reg.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] in {'DEPUTADO ESTADUAL','DEPUTADO DISTRITAL'} and dic_cand[4][cod] == uf]
+            list_dep_reg = [cod for cod in dic_cand[0].keys() if conj_dep_reg.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] in {'DEPUTADO ESTADUAL','DEPUTADO DISTRITAL'} and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO'] + \
+                           [cod for cod in dic_cand[0].keys() if conj_dep_reg.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] in {'DEPUTADO ESTADUAL','DEPUTADO DISTRITAL'} and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO']
             if len(list(set(list_dep_reg))) > 1:
                 for ind, cod in enumerate(list(set(list_dep_reg))):
                     dados_dep_reg = "Número: " + str(dic_cand[2][cod]) + ", nome completo: " + dic_cand[0][cod] + \
-                         ", partido: " + dic_cand[3][cod]
+                         ", partido: " + dic_cand[3][cod] + ", reeleição: " + dic_cand[10][cod]
                     print("\nCandidato",ind+1,"-> ",dados_dep_reg)                
                 confirma = input("\nSeu voto será computado como inválido. Motivo: Mais de um candidato listado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
                 list_voto[1] = "BRANCO/NULO"
@@ -173,12 +184,12 @@ def gera_colinha():
             confirma = input("\nSeu voto será computado como inválido. Motivo: Candidato não encontrado. Confirma (tecla S)? ")
             list_voto[2] = "BRANCO/NULO"
         else:
-            list_sen_rep = [cod for cod in dic_cand[0].keys() if conj_sen_rep.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'SENADOR' and dic_cand[4][cod] == uf] + \
-                           [cod for cod in dic_cand[0].keys() if conj_sen_rep.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'SENADOR' and dic_cand[4][cod] == uf]
+            list_sen_rep = [cod for cod in dic_cand[0].keys() if conj_sen_rep.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'SENADOR' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO'] + \
+                           [cod for cod in dic_cand[0].keys() if conj_sen_rep.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'SENADOR' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO']
             if len(list(set(list_sen_rep))) > 1:
                 for ind, cod in enumerate(list(set(list_sen_rep))):
                     dados_sen_rep = "Número: " + str(dic_cand[2][cod]) + ", nome completo: " + dic_cand[0][cod] + \
-                         ", partido: " + dic_cand[3][cod]
+                         ", partido: " + dic_cand[3][cod] + ", reeleição: " + dic_cand[10][cod]
                     print("\nCandidato",ind+1,"-> ",dados_sen_rep)                
                 confirma = input("\nSeu voto será computado como inválido. Motivo: Mais de um candidato listado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
                 list_voto[2] = "BRANCO/NULO"
@@ -199,12 +210,12 @@ def gera_colinha():
             confirma = input("\nSeu voto será computado como inválido. Motivo: Candidato não encontrado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
             list_voto[3] = "BRANCO/NULO"
         else:
-            list_gov_est = [cod for cod in dic_cand[0].keys() if conj_gov_est.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'GOVERNADOR' and dic_cand[4][cod] == uf] + \
-                           [cod for cod in dic_cand[0].keys() if conj_gov_est.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'GOVERNADOR' and dic_cand[4][cod] == uf]
+            list_gov_est = [cod for cod in dic_cand[0].keys() if conj_gov_est.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'GOVERNADOR' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO'] + \
+                           [cod for cod in dic_cand[0].keys() if conj_gov_est.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'GOVERNADOR' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO']
             if len(list(set(list_gov_est))) > 1:
                 for ind, cod in enumerate(list(set(list_gov_est))):
                     dados_gov_est = "Número: " + str(dic_cand[2][cod]) + ", nome completo: " + dic_cand[0][cod] + \
-                         ", partido: " + dic_cand[3][cod]
+                         ", partido: " + dic_cand[3][cod] + ", reeleição: " + dic_cand[10][cod]
                     print("\nCandidato",ind+1,"-> ",dados_gov_est)                
                 confirma = input("\nSeu voto será computado como inválido. Motivo: Mais de um candidato listado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
                 list_voto[3] = "BRANCO/NULO"
@@ -224,12 +235,12 @@ def gera_colinha():
             confirma = input("\nSeu voto será computado como inválido. Motivo: Candidato não encontrado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
             list_voto[4] = "BRANCO/NULO"
         else:
-            list_pres_rep = [cod for cod in dic_cand[0].keys() if conj_pres_rep.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'PRESIDENTE' and dic_cand[4][cod] == 'BR'] + \
-                            [cod for cod in dic_cand[0].keys() if conj_pres_rep.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'PRESIDENTE' and dic_cand[4][cod] == 'BR']
+            list_pres_rep = [cod for cod in dic_cand[0].keys() if conj_pres_rep.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'PRESIDENTE' and dic_cand[4][cod] == 'BR' and dic_cand[6][cod] == 'DEFERIDO'] + \
+                            [cod for cod in dic_cand[0].keys() if conj_pres_rep.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'PRESIDENTE' and dic_cand[4][cod] == 'BR' and dic_cand[6][cod] == 'DEFERIDO']
             if len(list(set(list_pres_rep))) > 1:
                 for ind, cod in enumerate(list(set(list_pres_rep))):
                     dados_pres_rep = "Número: " + str(dic_cand[2][cod]) + ", nome completo: " + dic_cand[0][cod] + \
-                         ", partido: " + dic_cand[3][cod]
+                         ", partido: " + dic_cand[3][cod] + ", reeleição: " + dic_cand[10][cod]
                     print("\nCandidato",ind+1,"-> ",dados_pres_rep)                
                 confirma = input("\nSeu voto será computado como inválido. Motivo: Mais de um candidato listado. Confirma (tecla S) ou não (qualquer outra tecla)? ")
                 list_voto[4] = "BRANCO/NULO"
