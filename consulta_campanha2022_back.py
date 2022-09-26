@@ -109,7 +109,7 @@ def busca_coligacoes():
         print("\nNenhum dado relacionado ao partido pesquisado foi encontrado.")
     else:
         list_pesq = [cod for cod in dic_colig[0].keys() if conj_pesq.issubset(set(un.unidecode(dic_colig[0][cod]).split())) and dic_colig[7][cod][0] == 'D'] + \
-                    [cod for cod in dic_colig[1].keys() if conj_pesq.issubset(set(un.unidecode(dic_colig[1][cod]).split())) and dic_colig[7][cod][0] == 'D']
+                    [cod for cod in dic_colig[0].keys() if conj_pesq.issubset(set(un.unidecode(dic_colig[1][cod]).split())) and dic_colig[7][cod][0] == 'D']
         if len(list_pesq) == 0:
             print("\nNenhuma coligação deferida com o nome pesquisado foi encontrada.")
         else:
@@ -137,7 +137,7 @@ def gera_colinha():
             list_voto[0] = "BRANCO/NULO"
         else:
             list_dep_fed = [cod for cod in dic_cand[0].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO'] + \
-                           [cod for cod in dic_cand[5].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[0][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO']
+                           [cod for cod in dic_cand[0].keys() if conj_dep_fed.issubset(set(un.unidecode(dic_cand[5][cod]).split())) and dic_cand[1][cod] == 'DEPUTADO FEDERAL' and dic_cand[4][cod] == uf and dic_cand[6][cod] == 'DEFERIDO']
             if len(list(set(list_dep_fed))) > 1:
                 for ind, cod in enumerate(list(set(list_dep_fed))):        
                     dados_dep_fed = "Número: " + str(dic_cand[2][cod]) + ", nome completo: " + dic_cand[0][cod] + \
