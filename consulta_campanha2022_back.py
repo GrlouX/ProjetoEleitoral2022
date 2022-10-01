@@ -76,8 +76,9 @@ def carga_coligacoes():
     composicao = {}    
     cargo = {}
     uf_eleicao = {}
+    codigo = {}
     situacao = {}
-    dic_coligacoes = (partido, sigla, numero, tipo, composicao, cargo, uf_eleicao, situacao)
+    dic_coligacoes = (partido, sigla, numero, tipo, composicao, cargo, uf_eleicao, codigo, situacao)
     for n in range(arq.shape[0]):
         cod = arq.loc[n,"COD_CHAVE"] # COD_CHAVE = SQ_COLIGACAO + NR_PARTIDO + CD_CARGO*
         partido.update({cod : arq.loc[n,"NM_PARTIDO"]})
@@ -87,7 +88,8 @@ def carga_coligacoes():
         composicao.update({cod : arq.loc[n,"DS_COMPOSICAO_COLIGACAO"]})
         cargo.update({cod : arq.loc[n,"DS_CARGO"]})
         uf_eleicao.update({cod : arq.loc[n,"SG_UE"]})
-        situacao.update({cod : arq.loc[n,"CD_SITUACAO_LEGENDA"]})    
+        codigo.update({cod : arq.loc[n,"CD_SITUACAO_LEGENDA"]})
+        situacao.update({cod : arq.loc[n,"DS_SITUACAO"]})
     return dic_coligacoes
 
 #Função que retorna os dados relacionados ao partido pesquisado
@@ -115,7 +117,7 @@ def busca_coligacoes():
         else:
             for ind, cod in enumerate(list(set(list_pesq))):
                 dados_pesq = "Partido: " + dic_colig[0][cod] + " (" + dic_colig[1][cod] + ")" + ", nº da legenda: " + str(dic_colig[2][cod]) + \
-                             ", agremiação: " + dic_colig[3][cod] + " " + dic_colig[4][cod] + " para " + dic_colig[5][cod] + " " + dic_colig[6][cod]
+                             ", agremiação: " + dic_colig[3][cod] + " " + dic_colig[4][cod] + " para " + dic_colig[5][cod] + " (" + dic_colig[6][cod] + ")" + " - " + dic_colig[8][cod]
                 print("\nOcorrência",ind+1,"-> ",dados_pesq)
 
 # Função para gerar arquivo com lista de candidatos para votar
